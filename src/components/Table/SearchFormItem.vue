@@ -55,8 +55,6 @@ const props = defineProps<SearchFormItem>()
 // Re receive SearchParam
 const _searchParam = computed(() => props.searchParam)
 
-console.log('column', props.column)
-
 const SearchRenderScope = reactive({
   searchParam: {
     username: 'foo',
@@ -93,12 +91,8 @@ const placeholder = computed(() => {
 
 // 接收 enumMap
 const enumMap = inject('enumMap', ref(new Map()))
-console.log('enumMap', enumMap.value)
-
 const columnEnum = computed(() => {
   let enumData = enumMap.value.get(props.column.key)
-  console.log('enumData', enumData)
-
   if (!enumData) return []
   return enumData
 })

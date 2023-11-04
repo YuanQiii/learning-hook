@@ -1,5 +1,27 @@
 <template>
-  <MyTable :columns="columns" />
+  <MyTable :columns="columns" :request-api="getTableList">
+    <template #tableHeader="scope">
+      <a-button type="primary" @click="message.success('增加')"> 增加 </a-button>
+      <a-button
+        type="primary"
+        danger
+        @click="message.success(scope.selectedRowKeys)"
+        :disabled="!scope.hasSelected"
+      >
+        删除
+      </a-button>
+    </template>
+
+    <template #usernameHeader="scope">
+      <a-button type="primary" @click="message.success('我是通过作用域插槽渲染的表头')">
+        {{ scope.column?.title }}
+      </a-button>
+    </template>
+
+    <template #operation="scope">
+      <a-button type="primary" link @click="message.success(scope.record.id)">详情</a-button>
+    </template>
+  </MyTable>
 </template>
 <script lang="tsx" setup>
 import { reactive } from 'vue'
@@ -7,6 +29,7 @@ import MyTable from '../components/Table/MyTable.vue'
 import { ColumnProps, SearchType, HeaderRenderScope } from '../components/Table/interface'
 import { User } from '../api/interface'
 import { message } from 'ant-design-vue'
+import axios from 'axios'
 
 const genderType = [
   {
@@ -46,16 +69,21 @@ const userStatus = [
 const headerRender = (scope: HeaderRenderScope<User.ResUserList>) => {
   return (
     <a-button type='primary' onClick={() => message.success('我是通过 tsx 语法渲染的表头')}>
-      {scope.column.title}
+      {scope.column.key}
     </a-button>
   )
 }
 
 // 表格配置项
 const columns = reactive<ColumnProps<User.ResUserList>[]>([
-  { type: 'selection', fixed: 'left', width: 70 },
-  { type: 'sort', title: 'Sort', width: 80 },
-  { type: 'expand', title: 'Expand', width: 85 },
+  {
+    key: '#',
+    title: '#',
+  },
+  {
+    key: 'id',
+    title: 'ID',
+  },
   {
     key: 'username',
     title: '用户姓名',
@@ -63,13 +91,10 @@ const columns = reactive<ColumnProps<User.ResUserList>[]>([
       el: SearchType.INPUT,
       tooltip: '我是搜索提示',
     },
-    render: (scope) => {
+    customRender: (scope) => {
       return (
-        <a-button
-          type='primary'
-          link
-          onClick={() => message.success('我是通过 tsx 语法渲染的内容')}>
-          {scope.row.username}
+        <a-button type='link' onClick={() => message.success('我是通过 tsx 语法渲染的内容')}>
+          {scope.record.username}
         </a-button>
       )
     },
@@ -90,6 +115,7 @@ const columns = reactive<ColumnProps<User.ResUserList>[]>([
     // 多级 prop
     key: 'user.detail.age',
     title: '年龄',
+    sorter: (a: User.ResUserList, b: User.ResUserList) => a.user.detail.age - b.user.detail.age,
     // search: {
     //   // 自定义 search 显示内容
     //   render: ({ searchParam }) => {
@@ -112,28 +138,12 @@ const columns = reactive<ColumnProps<User.ResUserList>[]>([
     enum: userStatus,
     search: { el: SearchType.SELECT },
     // fieldNames: { label: 'userLabel', value: 'userValue' },
-    render: (scope) => {
-      // return (
-      //   <>
-      //     {BUTTONS.value.status ? (
-      //       <el-switch
-      //         model-value={scope.row.status}
-      //         active-text={scope.row.status ? "启用" : "禁用"}
-      //         active-value={1}
-      //         inactive-value={0}
-      //         onClick={() => changeStatus(scope.row)}
-      //       />
-      //     ) : (
-      //       <el-tag type={scope.row.status ? "success" : "danger"}>{scope.row.status ? "启用" : "禁用"}</el-tag>
-      //     )}
-      //   </>
-      // );
-
+    customRender: (scope) => {
       return (
         <a-switch
-          v-model:checked={scope.row.status}
-          checked-children='开'
-          un-checked-children='关'
+          v-model:checked={scope.record.status}
+          checked-children='启用'
+          un-checked-children='禁止'
         />
       )
     },
@@ -142,7 +152,6 @@ const columns = reactive<ColumnProps<User.ResUserList>[]>([
     key: 'createTime',
     title: '创建时间',
     headerRender,
-    width: 180,
     search: {
       el: SearchType.DATE_PICKER,
       span: 2,
@@ -150,6 +159,23 @@ const columns = reactive<ColumnProps<User.ResUserList>[]>([
       defaultValue: ['2022-11-12 11:35:00', '2022-12-12 11:35:00'],
     },
   },
-  { key: 'operation', title: '操作', fixed: 'right', width: 330 },
+  {
+    key: 'operation',
+    title: '操作',
+    fixed: 'right',
+    width: 330,
+  },
 ])
+
+/**
+ * 获取表格数据
+ * @param params
+ * @returns {Promise<User.ResUserList[]>}
+ * @constructor
+ */
+const getTableList = () => {
+  return axios.post<User.ResUserList>(
+    'https://mock.mengxuegu.com/mock/629d727e6163854a32e8307e/geeker/user/list',
+  )
+}
 </script>

@@ -5,6 +5,7 @@
     </a-form-item>
   </a-form>
   <a-button type="primary" @click="search">搜索</a-button>
+  <a-button type="primary" @click="reset">重置</a-button>
 </template>
 
 <script lang="ts" setup>
